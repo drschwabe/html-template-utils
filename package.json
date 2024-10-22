@@ -1,0 +1,10 @@
+{
+  "name": "html-template-utils",
+  "version": "0.0.1",
+  "main": "html-template-utils.js",
+  "author": "Derrick Schwabe <drschwabe@fastmail.com>",
+  "dependencies": {
+    "jquery": "^3.7.1",
+    "uhtml-ssr": "0.9.1"
+  }
+}
