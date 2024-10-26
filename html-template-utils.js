@@ -16,6 +16,8 @@ if(isBrowser()) {
 
 let render 
 
+//Browser uhtml(v3 and v4) is sometimes inconsistent with uhtml-ssr on server
+//so we just use uhtml-ssr on client too: 
 if(isBrowser()) {
   render = (where, what) => {
     const string = uhtmlSSRrender(String, what)
