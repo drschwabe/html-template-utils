@@ -97,7 +97,7 @@ Shorthand for calling `html([someString])` for when you need to avoid visible ma
 [uhtml-ssr][2] `render` function, proxied to accommodate a brief check to 
 conditionally render in browser. 
 
-If rendered in browser the output is a string, and first param must be an element (container).  Serverside API unchanged; first param must be String. 
+If rendered in browser the output goes to a container, and first param must be an element (the container).  Serverside API unchanged; first param must be String. 
 
 ```js
 
