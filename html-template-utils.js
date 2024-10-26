@@ -32,6 +32,21 @@ const css = (...classes) =>
 
 
 const Grow = html`<span class="grow"></span>` 
+
+const isEditing = () => {
+  const activeElement = document.activeElement;
+  if(activeElement.tagName === 'INPUT' ||
+     activeElement.tagName === 'TEXTAREA' ||
+     activeElement.contentEditable === 'true' || 
+     activeElement.contentEditable === 'plaintext-only') {
+    return true 
+  } 
+  if(document.querySelector('.EDITOR')) return true 
+  return false 
+} 
+
  
 
-module.exports = { css, html, htmlRaw, render, $j, isBrowser, Grow }  
+module.exports = { css, html, htmlRaw, render, $j, isBrowser, Grow, 
+  isEditing 
+}

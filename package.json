@@ -1,6 +1,6 @@
 {
   "name": "html-template-utils",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "html-template-utils.js",
   "author": "Derrick Schwabe <drschwabe@fastmail.com>",
   "dependencies": {
