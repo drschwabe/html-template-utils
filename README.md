@@ -51,13 +51,13 @@ Check if you are in NodeJS or browser; ie- so you can do browser
 specific stuff or prevent some NodeJS stuff from running in browser.
 
 ```js
-if(isBrowser()) doBrowserSpecificStuff
+if(isBrowser()) doBrowserSpecificStuff()
 ```
 
 
 #### css 
 
-Function for concatenating css. You can concatenate space delimited strings, comma delimited strings, variables, or any combination therof. 
+Function for concatenating css. You can concatenate space delimited strings, comma delimited strings, variables, or any combination thereof. 
 
 ```js
 const specialblue = 'text-blue-500/50' 
@@ -73,7 +73,7 @@ html`
 
 #### Grow 
 
-uhtml template/shorthand for a Tailwind grow span ie- to fill a gap
+[uhtml][1] template/shorthand for a Tailwind grow span ie- to fill a gap
 
 ```js
 <div id="header" class="flex items-center"> 
@@ -83,18 +83,18 @@ uhtml template/shorthand for a Tailwind grow span ie- to fill a gap
 </div> 
 ```
 
-### html
+#### html
 
-uhtml-ssr `html` object without modification
+[uhtml-ssr][2] `html` object without modification
 
-### htmlRaw
+#### htmlRaw
 
 Shorthand for calling `html([someString])` for when you need to avoid visible markup in the rendered DOM 
 
 
-### render
+#### render
 
-uhtml-ssr `render` function, proxied to accommodate a brief check to 
+[uhtml-ssr][2] `render` function, proxied to accommodate a brief check to 
 conditionally render in browser. 
 
 If rendered in browser the output is a string, and first param must be an element (container).  Serverside API unchanged; first param must be String. 
@@ -110,6 +110,8 @@ const output = render(String, template('world')
 render( $j('#output').el, template('Bob') 
 ```
 
+[1]:https://github.com/WebReflection/uhtml
+[2]:https://github.com/WebReflection/uhtml-ssr
 
 
 
