@@ -66,40 +66,44 @@ function restoreState(target) {
 } 
 
 function processAttributes(str) {
-    
-  // First evaluate expressions, including nested ones
-  let evaluated = str;
-    
-  // Handle ${} expressions in attributes
-  evaluated = evaluated.replace(/(\w+)=\${((?:[^}]|\{(?:[^}]|\{[^}]*\})*\})*?)}/g, (match, attr, expr) => {
+
+  // First process any nested template literals in ternaries
+  let evaluated = str.replace(/\${([^}]+)}/g, (match, expr) => {
     try {
-      // Pre-process any nested template literals
-      const processedExpr = expr.replace(/`([^`]*)`/g, (_, template) => {
-        // Handle nested ${} expressions within template literals
-        return '`' + template.replace(/\${([^}]+)}/g, (__, innerExpr) => {
-          try {
-            return eval(innerExpr)
-          } catch (e) {
-            console.error('Error evaluating nested expression:', innerExpr)
-            return innerExpr
-          }
-        }) + '`'
-      })
-      
-      const value = eval(processedExpr)
-      return `${attr}=${value.toString().trim()}`
+      if (expr.includes('`')) {
+        const processedExpr = expr.includes('?')
+          ? eval(expr)
+          : expr
+        if (typeof processedExpr === 'string') {
+          return processAttributes(processedExpr, context)
+        }
+        return processedExpr;
+      }
+      return '${' + expr + '}'
+    } catch (e) {
+      console.error('Error processing nested template:', expr)
+      return match
+    }
+  })
+
+  // Then process remaining attribute expressions
+  evaluated = evaluated.replace(/(\w+)=\${(.+?)}/g, (match, attr, expr) => {
+    try {
+      const value = eval(expr);
+      return `${attr}="${value.toString().trim()}"`
     } catch (e) {
       console.error('Error evaluating:', expr)
       return match
     }
   });
-
-  // Then quote attributes
-  return evaluated.replace(/(\w+)=([^">\n][^>]*?)(?=>|\s+\w+=)/g, (match, attr, value) => {
+  
+  // Finally quote any remaining unquoted attributes
+  // Updated regex to better handle the space before />
+  return evaluated.replace(/(\w+)=([^">\n][^>]*?)(?=\s*\/?>|\s+\w+=)/g, (match, attr, value) => {
     if (value.startsWith('"') && value.endsWith('"')) return match
     const normalizedValue = value.replace(/\s+/g, ' ').trim()
     return `${attr}="${normalizedValue}"`
-  });
+  })
 }
 
 function expandSelfClosingTags(html) {
