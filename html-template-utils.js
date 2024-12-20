@@ -3,6 +3,8 @@ const { html, render: uhtmlSSRrender } = require('uhtml-ssr')
 const htmlRaw = str => html([str])
 const $j = require('jquery')  
 
+const renderVanilla = require('./render-vanilla')
+
 const isBrowser = () => typeof window !== 'undefined' 
   && typeof window.document !== 'undefined'
    
@@ -48,5 +50,5 @@ const isEditing = () => {
  
 
 module.exports = { css, html, htmlRaw, render, $j, isBrowser, Grow, 
-  isEditing 
+  isEditing, renderVanilla
 }
