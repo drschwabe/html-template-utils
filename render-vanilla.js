@@ -129,10 +129,6 @@ function render(templateFnOrString, target) {
 
   } else {
     // Browser environment
-    if (!target) {
-      console.error("Invalid target.")
-      return
-    }
 
     let result = templateFnOrString
     if (isFunction(templateFnOrString)) {
@@ -141,15 +137,20 @@ function render(templateFnOrString, target) {
     result = processAttributes(result)
     result = expandSelfClosingTags(result)
 
-    // Save current state of the DOM element
-    saveState(target)
+    
+    if (target) {
+      // Save current state of the DOM element
+      saveState(target)
+  
+      // Render the new content
+      $j(target).html(result)
+      
+      // Restore the state
+      restoreState(target)
+      return
+    }
 
-    // Render the new content
-    const htmlContent = result
-    $j(target).html(htmlContent)
-
-    // Restore the state
-    restoreState(target)
+    return result
   }
 }
 
