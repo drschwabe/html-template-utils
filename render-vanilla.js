@@ -65,10 +65,21 @@ function restoreState(target) {
   })
 } 
 
-function processAttributes(str) {
-
-  // First process any nested template literals in ternaries
-  let evaluated = str.replace(/\${([^}]+)}/g, (match, expr) => {
+function processAttributes(str, context = {}) {
+  Object.assign(globalThis, context)
+  
+  // First extract style tags and replace with placeholders
+  const styles = []
+  const withoutStyles = str.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, (match) => {
+    styles.push(match)
+    return `%%STYLE_${styles.length - 1}%%`
+  })
+  
+  // Process attributes in the non-style content
+  let processed = withoutStyles
+  
+  // Process nested template literals in ternaries
+  processed = processed.replace(/\${([^}]+)}/g, (match, expr) => {
     try {
       if (expr.includes('`')) {
         const processedExpr = expr.includes('?')
@@ -77,7 +88,7 @@ function processAttributes(str) {
         if (typeof processedExpr === 'string') {
           return processAttributes(processedExpr, context)
         }
-        return processedExpr;
+        return processedExpr
       }
       return '${' + expr + '}'
     } catch (e) {
@@ -86,8 +97,8 @@ function processAttributes(str) {
     }
   })
 
-  // Then process remaining attribute expressions
-  evaluated = evaluated.replace(/(\w+)=\${(.+?)}/g, (match, attr, expr) => {
+  // Process remaining attribute expressions
+  processed = processed.replace(/(\w+)=\${(.+?)}/g, (match, attr, expr) => {
     try {
       const value = eval(expr);
       return `${attr}="${value.toString().trim()}"`
@@ -95,15 +106,19 @@ function processAttributes(str) {
       console.error('Error evaluating:', expr)
       return match
     }
-  });
+  })
   
-  // Finally quote any remaining unquoted attributes
-  // Updated regex to better handle the space before />
-  return evaluated.replace(/(\w+)=([^">\n][^>]*?)(?=\s*\/?>|\s+\w+=)/g, (match, attr, value) => {
+  // Quote any remaining unquoted attributes
+  processed = processed.replace(/(\w+)=([^">\n][^>]*?)(?=\s*\/?>|\s+\w+=)/g, (match, attr, value) => {
     if (value.startsWith('"') && value.endsWith('"')) return match
     const normalizedValue = value.replace(/\s+/g, ' ').trim()
     return `${attr}="${normalizedValue}"`
   })
+  
+  // Restore style tags
+  processed = processed.replace(/%%STYLE_(\d+)%%/g, (match, index) => styles[index])
+  
+  return processed
 }
 
 function expandSelfClosingTags(html) {
