@@ -97,21 +97,42 @@ function processAttributes(str, context = {}) {
     }
   })
 
-  // Process remaining attribute expressions
-  processed = processed.replace(/(\w+)=\${(.+?)}/g, (match, attr, expr) => {
+  // First handle data attributes with template expressions
+  processed = processed.replace(/(\w+(?:-\w+)*)=\${(.+?)}/g, (match, attr, expr) => {
     try {
-      const value = eval(expr);
-      return `${attr}="${value.toString().trim()}"`
+      const value = eval(expr)
+      // Handle undefined, null, and boolean values appropriately
+      if (value === undefined || value === null) {
+        return `${attr}=""`
+      } else if (typeof value === 'boolean') {
+        return value ? attr : `${attr}="false"`
+      } else {
+        return `${attr}="${value.toString().trim()}"`
+      }
     } catch (e) {
       console.error('Error evaluating:', expr)
-      return match
+      return `${attr}=""`
     }
   })
   
-  // Quote any remaining unquoted attributes
-  processed = processed.replace(/(\w+)=([^">\n][^>]*?)(?=\s*\/?>|\s+\w+=)/g, (match, attr, value) => {
-    if (value.startsWith('"') && value.endsWith('"')) return match
-    const normalizedValue = value.replace(/\s+/g, ' ').trim()
+  // Then handle class attributes with multi-line support
+  processed = processed.replace(/class=(?!")([\s\S]*?)(?=\s+(?:\w+(?:-\w+)*)?=|\/?>|>)/g, (match, value) => {
+    if (value.startsWith('"')) return match
+    const normalizedValue = value
+      .replace(/\s+/g, ' ')
+      .trim()
+    return `class="${normalizedValue}"`
+  })
+
+  // Finally handle any remaining unquoted attributes
+  processed = processed.replace(/(\w+(?:-\w+)*)=([^"\s>][^>]*?)(?=\s+(?:\w+(?:-\w+)*)?=|\/?>|>)/g, (match, attr, value) => {
+    if (value.startsWith('"')) return match
+    if (attr === 'class') return match // Skip class attributes as they're already handled
+    
+    // Split the value at the first occurrence of a new attribute
+    const valueParts = value.split(/\s+(?=\w+(?:-\w+)*=)/)
+    const normalizedValue = valueParts[0].replace(/\s+/g, ' ').trim()
+    
     return `${attr}="${normalizedValue}"`
   })
   
