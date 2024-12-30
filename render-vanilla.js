@@ -97,21 +97,24 @@ function processAttributes(str, context = {}) {
     }
   })
 
-  // First handle data attributes with template expressions
+  // First remove empty attributes entirely
+  processed = processed.replace(/\s*(\w+(?:-\w+)*)=\s*(?=\s|\/?>|>|\n)/g, '')
+  
+  // Then handle data attributes with template expressions
   processed = processed.replace(/(\w+(?:-\w+)*)=\${(.+?)}/g, (match, attr, expr) => {
     try {
       const value = eval(expr)
-      // Handle undefined, null, and boolean values appropriately
-      if (value === undefined || value === null) {
-        return `${attr}=""`
+      // Remove attribute if value is falsey
+      if (!value) {
+        return ''
       } else if (typeof value === 'boolean') {
-        return value ? attr : `${attr}="false"`
+        return value ? attr : ''
       } else {
         return `${attr}="${value.toString().trim()}"`
       }
     } catch (e) {
       console.error('Error evaluating:', expr)
-      return `${attr}=""`
+      return ''
     }
   })
   
