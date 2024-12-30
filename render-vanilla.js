@@ -97,10 +97,7 @@ function processAttributes(str, context = {}) {
     }
   })
 
-  // First remove empty attributes entirely
-  processed = processed.replace(/\s*(\w+(?:-\w+)*)=\s*(?=\s|\/?>|>|\n)/g, '')
-  
-  // Then handle data attributes with template expressions
+  // First handle template expressions
   processed = processed.replace(/(\w+(?:-\w+)*)=\${(.+?)}/g, (match, attr, expr) => {
     try {
       const value = eval(expr)
@@ -110,12 +107,37 @@ function processAttributes(str, context = {}) {
       } else if (typeof value === 'boolean') {
         return value ? attr : ''
       } else {
+        // Special handling for class to preserve all class names including with leading space
+        if (attr === 'class') {
+          const trimmedValue = value.toString().trim()
+          if (!trimmedValue) return ''
+          return `class="${trimmedValue}"`
+        }
         return `${attr}="${value.toString().trim()}"`
       }
     } catch (e) {
       console.error('Error evaluating:', expr)
       return ''
     }
+  })
+  
+  // Then handle raw class attributes with or without spaces
+  processed = processed.replace(/class\s*=\s*(?!")([\s\S]*?)(?=\s+(?:\w+(?:-\w+)*)?=|\/?>|>)/g, (match, value) => {
+    const trimmedValue = value.trim()
+    if (!trimmedValue) return ''
+    return `class="${trimmedValue}"`
+  })
+  
+  // Remove any empty attributes
+  processed = processed.replace(/\s*(\w+(?:-\w+)*)=\s*(?=\s|\/?>|>|\n)/g, '')
+  
+  // Handle remaining unquoted attributes
+  processed = processed.replace(/(\w+(?:-\w+)*)=([^"\s>][^>]*?)(?=\s+(?:\w+(?:-\w+)*)?=|\/?>|>)/g, (match, attr, value) => {
+    if (value.startsWith('"')) return match
+    if (attr === 'class') return match // Skip class attributes as they're already handled
+    const normalizedValue = value.trim()
+    if (!normalizedValue) return ''
+    return `${attr}="${normalizedValue}"`
   })
   
   // Then handle class attributes with multi-line support
