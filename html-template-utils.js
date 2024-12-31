@@ -1,7 +1,7 @@
 const { log, warn } = console 
 const $j = require('jquery')  
 
-const render = require('./render-vanilla')
+const render = require('./render')
 
 const isBrowser = () => typeof window !== 'undefined' 
   && typeof window.document !== 'undefined'
