@@ -11,7 +11,7 @@ npm install html-template-utils
 ```
 
 ```js
-const { isBrowser, isEditing, $j, css, Grow, html, htmlRaw, render } = require('html-template-utils') 
+const { isBrowser, isEditing, $j, css, Grow, render } = require('html-template-utils') 
 ```
 
 ### client only
@@ -63,17 +63,18 @@ Function for concatenating css. You can concatenate space delimited strings, com
 const specialblue = 'text-blue-500/50' 
 const boldRed = 'text-red-500 font-bold' 
 
-html`
+return `
   <div class=${ css( specialBlue, boldRed, 
     'underline italic, 'my-4') }> 
-    hello world </div> 
+    hello world 
+  </div> 
 `
 
 ```
 
 #### Grow 
 
-[uhtml][1] template/shorthand for a Tailwind grow span ie- to fill a gap
+template/shorthand for a Tailwind grow span ie- to fill a gap
 
 ```js
 <div id="header" class="flex items-center"> 
@@ -83,34 +84,28 @@ html`
 </div> 
 ```
 
-#### html
-
-[uhtml-ssr][2] `html` object without modification
-
-#### htmlRaw
-
-Shorthand for calling `html([someString])` for when you need to avoid visible markup in the rendered DOM 
-
 
 #### render
 
-[uhtml-ssr][2] `render` function, proxied to accommodate a brief check to 
-conditionally render in browser. 
+Returns a DOM-ready string from a vanilla template literal.  
 
-If rendered in browser the output goes to a container, and first param must be an element (the container).  Serverside API unchanged; first param must be String. 
+This is an optional pre-DOM insertion/replacement step you can run on template literals to enable quoteless attributes and self closing tags. 
+
+Similar to [uhtml-ssr][2] `render` function, except no special `html` tag literal is required. 
+
 
 ```js
-
-const template = () => `<p>hello ${name}</p>`
-
-//NodeJS 
-const output = render(String, template('world') 
-
-//browser
-render( $j('#output').el, template('Bob') 
+const template = `<div id=${myId} class=${myDynamicClass()} />`
+document.body.innerHTML = render(template)
+//if you didn't call render, the attributes would be missing "" and thus
+//be incorrectly parsed by the DOM; the div would also not close
 ```
 
-[1]:https://github.com/WebReflection/uhtml
+If rendered in browser there is some early/experimental DOM state management in an effort to preserve form fields, etc 
+
+The render function was originally a direct export from **uhtml-ssr**'s `render` function but I wanted a simpler function that did not enforce opinion on 'unsafe HTML' and that could be used interchangeably with any string ie- no special tag required. 
+
+
 [2]:https://github.com/WebReflection/uhtml-ssr
 
 
