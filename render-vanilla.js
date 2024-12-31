@@ -97,7 +97,7 @@ function processAttributes(str, context = {}) {
     }
   })
 
-  // First handle template expressions
+  // First handle template expressions including base64 images
   processed = processed.replace(/(\w+(?:-\w+)*)=\${(.+?)}/g, (match, attr, expr) => {
     try {
       const value = eval(expr)
@@ -107,7 +107,16 @@ function processAttributes(str, context = {}) {
       } else if (typeof value === 'boolean') {
         return value ? attr : ''
       } else {
-        // Special handling for class to preserve all class names including with leading space
+        // Special handling for src attributes to ensure proper data URL format
+        if (attr === 'src') {
+          const valueStr = value.toString()
+          // If it's a base64 string without proper prefix, add it
+          if (valueStr.match(/^[A-Za-z0-9+/=]+$/)) {
+            return `src="data:image/png;base64,${valueStr}"`
+          }
+          return `src="${valueStr}"`
+        }
+        // Special handling for class to preserve all class names
         if (attr === 'class') {
           const trimmedValue = value.toString().trim()
           if (!trimmedValue) return ''
@@ -128,13 +137,22 @@ function processAttributes(str, context = {}) {
     return `class="${trimmedValue}"`
   })
   
+  // Handle any remaining attribute quotes properly
+  processed = processed.replace(/=\s*"\s*([^"]*?)\s*"\s*=\s*""\s*(?=>)/g, '="$1"')
+  
+  // Clean up any orphaned ="" that might have been added
+  processed = processed.replace(/\s*=\s*""\s*(?=>)/g, '')
+  
+  // Remove any empty attributes
+  processed = processed.replace(/\s*(\w+(?:-\w+)*)=\s*(?=\s|\/?>|>|\n)/g, '')
+  
   // Remove any empty attributes
   processed = processed.replace(/\s*(\w+(?:-\w+)*)=\s*(?=\s|\/?>|>|\n)/g, '')
   
   // Handle remaining unquoted attributes
   processed = processed.replace(/(\w+(?:-\w+)*)=([^"\s>][^>]*?)(?=\s+(?:\w+(?:-\w+)*)?=|\/?>|>)/g, (match, attr, value) => {
     if (value.startsWith('"')) return match
-    if (attr === 'class') return match // Skip class attributes as they're already handled
+    if (attr === 'class' || attr === 'src') return match // Skip already handled attributes
     const normalizedValue = value.trim()
     if (!normalizedValue) return ''
     return `${attr}="${normalizedValue}"`
